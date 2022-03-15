@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Burpsuite---SSRF专题 | Evylnk</title><meta name="author" content="Evylnk"><meta name="copyright" content="Evylnk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="服务端请求伪造 Lab: Basic SSRF against the local server在这个实验，我们不能直接访问&#x2F;admin的页面，但是我们可以找到stockApi发起的请求，于是我们就可以对其进行修改，伪造成由我们本地发起的请求  达到删除用户的目的 Lab: Basic SSRF against another back-end system针对后端的系统用户无法去直接访问，但是服">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Burpsuite---SSRF专题">
+<meta property="og:url" content="http://emion.fun/2022/03/12/burp_ssrf/index.html">
+<meta property="og:site_name" content="Evylnk">
+<meta property="og:description" content="服务端请求伪造 Lab: Basic SSRF against the local server在这个实验，我们不能直接访问&#x2F;admin的页面，但是我们可以找到stockApi发起的请求，于是我们就可以对其进行修改，伪造成由我们本地发起的请求  达到删除用户的目的 Lab: Basic SSRF against another back-end system针对后端的系统用户无法去直接访问，但是服">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg">
+<meta property="article:published_time" content="2022-03-12T01:24:23.384Z">
+<meta property="article:modified_time" content="2022-03-14T12:31:06.375Z">
+<meta property="article:author" content="Evylnk">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg"><link rel="shortcut icon" href="/img/1.jpg"><link rel="canonical" href="http://emion.fun/2022/03/12/burp_ssrf/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Burpsuite---SSRF专题',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-03-14 20:31:06'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Evylnk</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Burpsuite---SSRF专题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-03-12T01:24:23.384Z" title="发表于 2022-03-12 09:24:23">2022-03-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-03-14T12:31:06.375Z" title="更新于 2022-03-14 20:31:06">2022-03-14</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Burpsuite---SSRF专题"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><strong>服务端请求伪造</strong></p>
+<h1 id="Lab-Basic-SSRF-against-the-local-server"><a href="#Lab-Basic-SSRF-against-the-local-server" class="headerlink" title="Lab: Basic SSRF against the local server"></a>Lab: Basic SSRF against the local server</h1><p><strong>在这个实验，我们不能直接访问/admin的页面，但是我们可以找到<code>stockApi</code>发起的请求，于是我们就可以对其进行修改，伪造成由我们本地发起的请求</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h06ulhwwspj20n201sdfx.jpg"></p>
+<p><strong>达到删除用户的目的</strong></p>
+<h1 id="Lab-Basic-SSRF-against-another-back-end-system"><a href="#Lab-Basic-SSRF-against-another-back-end-system" class="headerlink" title="Lab: Basic SSRF against another back-end system"></a>Lab: Basic SSRF against another back-end system</h1><p><strong>针对后端的系统用户无法去直接访问，但是服务器可以发起请求，于是我们依然可以利用ssrf打</strong></p>
+<p><strong>用intruder模块爆破1-255网段</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h06v6lxct9j214t0u0gpg.jpg"></p>
+<h1 id="Lab-SSRF-with-blacklist-based-input-filter"><a href="#Lab-SSRF-with-blacklist-based-input-filter" class="headerlink" title="Lab: SSRF with blacklist-based input filter"></a>Lab: SSRF with blacklist-based input filter</h1><p><strong>若是有黑名单过滤，一些应用程序会阻止包含诸如<code>127.0.0.1</code>之类的主机名<code>localhost</code>或诸如<code>/admin</code>，我们可以考虑以下一些方法进行绕过</strong></p>
+<ul>
+<li><strong>将127.0.0.1用<code>2130706433</code>, <code>017700000001</code>, or <code>127.1</code>来代替</strong></li>
+<li><strong>使用双url编码或者大小写混写绕过</strong></li>
+<li><strong>可以用<code>spoofed.burpcollaborator.net</code>来解析成127.0.0.1</strong></li>
+</ul>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h06vxiatc3j216b0u0jvi.jpg"></p>
+<h1 id="Lab-SSRF-with-whitelist-based-input-filter"><a href="#Lab-SSRF-with-whitelist-based-input-filter" class="headerlink" title="Lab: SSRF with whitelist-based input filter"></a>Lab: SSRF with whitelist-based input filter</h1><p><strong>基于白名单的绕过</strong></p>
+<p><strong>先用一个@字符来判断url是否支持嵌入解析</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">http://baidu.com@emion.fun</span><br><span class="line">例如这样，就会解析@后面的网站</span><br></pre></td></tr></table></figure>
+
+<p><strong>然后用#号去指定url片段</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">http://127.0.0.1%2523@stock.weliketoshop.net/admin/delete?username=carlos</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意要进行双url编码</strong></p>
+<p><strong>达到bypass白名单的过程</strong></p>
+<h1 id="Lab-SSRF-with-filter-bypass-via-open-redirection-vulnerability"><a href="#Lab-SSRF-with-filter-bypass-via-open-redirection-vulnerability" class="headerlink" title="Lab: SSRF with filter bypass via open redirection vulnerability"></a>Lab: SSRF with filter bypass via open redirection vulnerability</h1><p><strong>如果程序中包含了重定向的漏洞，就可以绕过基于SSRF的过滤，直接将请求重定向到后端目标上</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h06yx68u46j215r0u079m.jpg"></p>
+<h1 id="盲打的SSRF"><a href="#盲打的SSRF" class="headerlink" title="盲打的SSRF"></a>盲打的SSRF</h1><p><strong>同sql注入一样，也可以采用OAST技术将数据外带出来</strong></p>
+<p><strong>这个实验还要配合一个shellshock的漏洞</strong><code>CVE-2014-6271</code></p>
+<p><strong>（这里貌似只能执行woami这个命令，其他的带不出来。。。</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h0720ha18tj21sm0p2qc7.jpg"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">Evylnk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://emion.fun/2022/03/12/burp_ssrf/">http://emion.fun/2022/03/12/burp_ssrf/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://emion.fun" target="_blank">Evylnk</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2022/03/12/burp_file_upload/"><img class="prev-cover" src="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info"></div></div></a></div><div class="next-post pull-right"><a href="/2022/03/10/burp_os/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Burpsuite靶场---命令注入专题</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Evylnk</div><div class="author-info__description">CTF && PWN && STUDENT</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/LHXHL"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/LHXHL" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">愿你有一个灿烂的前程，愿你有情人终成眷属，愿你在尘世中收获幸福。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Basic-SSRF-against-the-local-server"><span class="toc-number">1.</span> <span class="toc-text">Lab: Basic SSRF against the local server</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-Basic-SSRF-against-another-back-end-system"><span class="toc-number">2.</span> <span class="toc-text">Lab: Basic SSRF against another back-end system</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-SSRF-with-blacklist-based-input-filter"><span class="toc-number">3.</span> <span class="toc-text">Lab: SSRF with blacklist-based input filter</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-SSRF-with-whitelist-based-input-filter"><span class="toc-number">4.</span> <span class="toc-text">Lab: SSRF with whitelist-based input filter</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Lab-SSRF-with-filter-bypass-via-open-redirection-vulnerability"><span class="toc-number">5.</span> <span class="toc-text">Lab: SSRF with filter bypass via open redirection vulnerability</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%9B%B2%E6%89%93%E7%9A%84SSRF"><span class="toc-number">6.</span> <span class="toc-text">盲打的SSRF</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/14/burp_unser/" title="Burpsuite---SSRF专题">Burpsuite---SSRF专题</a><time datetime="2022-03-14T12:30:38.336Z" title="发表于 2022-03-14 20:30:38">2022-03-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/12/burp_file_upload/" title="无题">无题</a><time datetime="2022-03-12T06:02:14.568Z" title="发表于 2022-03-12 14:02:14">2022-03-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/12/burp_ssrf/" title="Burpsuite---SSRF专题">Burpsuite---SSRF专题</a><time datetime="2022-03-12T01:24:23.384Z" title="发表于 2022-03-12 09:24:23">2022-03-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/10/burp_os/" title="Burpsuite靶场---命令注入专题">Burpsuite靶场---命令注入专题</a><time datetime="2022-03-10T03:19:44.065Z" title="发表于 2022-03-10 11:19:44">2022-03-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/03/10/burp_dir_tra/" title="Burpsuite靶场---目录穿越专题">Burpsuite靶场---目录穿越专题</a><time datetime="2022-03-10T01:11:41.162Z" title="发表于 2022-03-10 09:11:41">2022-03-10</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2021 - 2022 By Evylnk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi,希望能够帮到你。</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.2
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, ''],
+        insertScript: [200, () => {
+          document.querySelectorAll('mjx-container:not\([display]\)').forEach(node => {
+            const target = node.parentNode
+            if (target.nodeName.toLowerCase() === 'li') {
+              target.parentNode.classList.add('has-jax')
+            } else {
+              target.classList.add('has-jax')
+            }
+          });
+        }, '', false]
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typeset()
+}</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="true" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
